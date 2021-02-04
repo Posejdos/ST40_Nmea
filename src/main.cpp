@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <SoftwareSerial9.h>
 
-SoftwareSerial9 seatalk(12, 11); //rx, tx
+SoftwareSerial9 seatalk(4, 11); //rx, tx
 
 unsigned char msg[4]; //message incoming
 float speed;
@@ -65,7 +65,7 @@ int CalculateAngle(unsigned char *nums)
   hexint = strtoul(fullhex, NULL, 16); //bytes to int
 
   int divided = hexint / 2;
-  return (360 - divided);
+  return (divided);
 } 
 
 float CalculateSpeed(unsigned char *nums)
@@ -82,6 +82,9 @@ void setup()
      
   Serial.println("Welcome.");
   seatalk.begin(4800); // set the data rate for the SoftwareSerial port
+
+  pinMode(5, OUTPUT); digitalWrite(5, HIGH); //needed for seatalk, 1 means "I'm listening"
+  pinMode(4, INPUT); //test seatalk input
 }
 
 void loop()
@@ -128,7 +131,7 @@ void loop()
   }
 
   Serial.print(nmeamsg);
-  Serial.println(checksum, HEX);
+  Serial.print(checksum, HEX);
+  Serial.println("<CR><LF>");
   delay(500);
-
 }
