@@ -85,6 +85,7 @@ void setup()
 
   pinMode(5, OUTPUT); digitalWrite(5, HIGH); //needed for seatalk, 1 means "I'm listening"
   pinMode(4, INPUT); //test seatalk input
+  pinMode(2, INPUT); //jumper from tx
 }
 
 void loop()
