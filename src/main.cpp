@@ -31,7 +31,8 @@ int CalculateAngle(unsigned char *nums)
 
 float CalculateSpeed(unsigned char *nums)
 {
-  float ones = nums[2]; //first byte
+  float ones = nums[2] & 0x7F; //first byte
+  //If this is still wrong, you're probably getting wrong units
   float tenth = nums[3]; //second byte
   return ones + (tenth/10);
 }
