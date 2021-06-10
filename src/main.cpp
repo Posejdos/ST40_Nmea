@@ -3,8 +3,6 @@
 
 SoftwareSerial9 seatalk(4, 11); //rx, tx
 
-unsigned char msg[4]; //message incoming
-uint16_t cmd_check; //command check
 float speed;
 int angle;
 
@@ -51,20 +49,27 @@ void setup()
 
 void loop()
 {
-  if (seatalk.available())
-  {
-    cmd_check = seatalk.read(); //first 9 bit "byte", need to check if 9th bit is high
+  uint16_t cmd_check; //command check
+  unsigned char msg[4]; //message incoming
 
+  do
+  {
+    if (seatalk.available())
+    {
+      cmd_check = seatalk.read();
+    }
+  } while (!((cmd_check >> 9) & 1)); //read the seatalk until I hit the command bit high
+  
+  if ((cmd_check == 16) || (cmd_check == 17)) //here I check If the command is for me
+  {    
+    msg[0] = cmd_check; //Use msg[0] as a char for parsing
     for (int i = 1; i <= 3; i++) //bytes 1,2,3 - I can skip the 9th bit here
     {
       msg[i] = seatalk.read();
     }
-    //Use cmd_check to check the 9th bit
-    //Use msg[0] as a char for parsing
-    msg[0] = cmd_check;
   }
 
-  if(!((cmd_check >> 9) & 1)) //check the 9th bit of the 1st "byte", if not 1 then return to start of loop
+  else //if command is not for me I go back
   {
     return;
   }
@@ -102,6 +107,4 @@ void loop()
   Serial.print(nmeamsg);
   Serial.print(checksum, HEX);
   Serial.println("<CR><LF>");
-
-  cmd_check = 0; //reset the command "flag"
 }
