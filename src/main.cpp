@@ -4,6 +4,7 @@
 SoftwareSerial9 seatalk(4, 11); //rx, tx
 
 unsigned char msg[4]; //message incoming
+uint16_t cmd_check; //command check
 float speed;
 int angle;
 
@@ -50,29 +51,36 @@ void setup()
 
 void loop()
 {
-
-  for (int i = 0; i < 4; i++) //4 times as 4 bytes in a frame
+  if (seatalk.available())
   {
-    if (seatalk.available())
+    cmd_check = seatalk.read(); //first 9 bit "byte", need to check if 9th bit is high
+
+    for (int i = 1; i <= 3; i++) //bytes 1,2,3 - I can skip the 9th bit here
     {
       msg[i] = seatalk.read();
     }
+    //Use cmd_check to check the 9th bit
+    //Use msg[0] as a char for parsing
+    msg[0] = cmd_check;
   }
 
-  if (msg[0] == 16) // ANGLE
+  if(!((cmd_check >> 9) & 1)) //check the 9th bit of the 1st "byte", if not 1 then return to start of loop
   {
-    angle = CalculateAngle(msg);
-  }
-  
-  else if (msg[0] == 17) //SPEED
-  {
-    speed = CalculateSpeed(msg);
+    return;
   }
 
-  else //The first byte isn't 110 or 111
+  switch (msg[0])
   {
-    delay(200);
-    return; //go to beggining of the loop, try again
+    case 16:
+      angle = CalculateAngle(msg);
+      break;
+
+    case 17:
+      speed = CalculateSpeed(msg);
+      break;
+    
+    default:
+      return;
   }
 
   dtostrf(speed, 3, 1, strspeed);
@@ -94,5 +102,6 @@ void loop()
   Serial.print(nmeamsg);
   Serial.print(checksum, HEX);
   Serial.println("<CR><LF>");
-  delay(500);
+
+  cmd_check = 0; //reset the command "flag"
 }
